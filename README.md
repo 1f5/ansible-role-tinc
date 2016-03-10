@@ -18,7 +18,7 @@ Role Variables
     
     Installs and initializes a tinc network.
 
-  * **update**
+  * **update** - (may be broken, todo)
     
     Regenerate config files and update local host cache. (keys untouched)
 
