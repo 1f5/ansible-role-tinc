@@ -67,7 +67,7 @@ Role Defaults
 
 * **node_ip** - *string* (default is **10.0.0.1**)
 
-  Virtual network node IP address within network. Override for each node.
+  Virtual network node IP address. Override for each node.
 
 * **netmask** - *string* (default is **255.255.255.0**)
 
