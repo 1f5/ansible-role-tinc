@@ -1,0 +1,149 @@
+%YAML 1.1  # roles/tinc/tasks/main.yml  -*- mode: yaml -*-
+
+#    Copyright (C) 2016  Etienne Noreau-Hebert <e@zncb.io>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+---
+- name: install tinc
+  apt: >
+    name=tinc
+    state=present
+    update_cache=yes
+  when: mode == "install" 
+
+- name: create network directory
+  file: >
+    path=/etc/tinc/{{ netname }}/hosts
+    recurse=yes
+    state=directory
+  when: mode == "install" 
+
+- name: remove network directory (uninstall)
+  file: >
+    path=/etc/tinc/{{ netname }}
+    state=absent
+  when: mode == "uninstall" 
+
+- name: create network config
+  template: >
+    src=tinc.conf.j2
+    dest=/etc/tinc/{{ netname }}/tinc.conf
+  when: (mode == "install") or (mode == "update")
+
+- name: create host config 
+  template: >
+    src=host.j2
+    dest=/etc/tinc/{{ netname }}/hosts/{{ ansible_hostname }}
+  when: (mode == "install") or (mode == "update")
+
+- name: create tinc key pair
+  when: mode == "install"
+  shell: tincd -n {{ netname }} -K{{ keysize }}
+  args:
+    creates: /etc/tinc/{{ netname }}/rsa_key.priv
+
+- name: add network to /etc/tinc/nets.boot
+  lineinfile: >
+    dest=/etc/tinc/nets.boot
+    create=yes
+    state=present
+    line="{{ netname }}"
+  when: (mode == "install") or (mode == "update")
+
+- name: remove network from /etc/tinc/nets.boot (uninstall)
+  lineinfile: >
+    dest=/etc/tinc/nets.boot
+    state=absent
+    line="{{ netname }}"
+  when: mode == "uninstall"
+
+- name: create tinc-up file
+  template: >
+    src=tinc-up.j2
+    dest=/etc/tinc/{{ netname }}/tinc-up
+    mode=0755
+  when: (mode == "install") or (mode == "update")
+
+- name: create tinc-down file
+  template: >
+    src=tinc-down.j2
+    dest=/etc/tinc/{{ netname }}/tinc-down
+    mode=0755
+  when: (mode == "install") or (mode == "update")
+
+- name: create local host config cache
+  become: no
+  delegate_to: 127.0.0.1
+  file: >
+    path={{ host_cache}}/{{ netname }}
+    state=directory
+  when: (mode == "install") or (mode == "update")
+
+- name: remove local host config cache (uninstall)
+  become: no
+  delegate_to: 127.0.0.1
+  file: >
+    path={{ host_cache}}/{{ netname }}
+    state=absent
+  when: mode == "uninstall"
+
+- name: fetch host config file
+  fetch: >
+    src=/etc/tinc/{{ netname }}/hosts/{{ ansible_hostname }}
+    dest={{ host_cache }}/{{ netname }}/{{ ansible_hostname }}
+    flat=yes
+    fail_on_missing=yes
+  when: (mode == "install") or (mode == "update")
+
+- name: sync host config files
+  synchronize:
+    src={{ host_cache }}/{{ netname }}/
+    dest=/etc/tinc/{{ netname }}/hosts/
+    copy_links=yes
+    delete=yes
+    recursive=yes
+    mode=push
+  notify: restart tinc
+  when: mode == "sync"
+
+- name: start tinc service
+  service: >
+    name=tinc
+    enabled=yes
+    state=started
+  when: mode == "start"
+
+- name: restart tinc service
+  service: >
+    name=tinc
+    enabled=yes
+    state=restarted
+  when: mode == "restart"
+
+- name: stop tinc service
+  service: >
+    name=tinc
+    state=stopped
+  when: mode == "stop"
+
+- name: disable tinc service
+  service: >
+    name=tinc
+    enabled=no
+    state=stopped
+  when: mode == "disable"
+ 
+
