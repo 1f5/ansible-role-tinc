@@ -1,5 +1,5 @@
-Tinc Ansible Role
-==================
+Ansible Role for Tinc
+=====================
 
 Ansible role to install, configure, and use tinc.
 
