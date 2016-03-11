@@ -17,5 +17,8 @@
 
 ---
 # Operation mode, see README.md
-mode: "sync"
+mode: "default"
+
+# Force regenerate keys
+regen_keys: no
 

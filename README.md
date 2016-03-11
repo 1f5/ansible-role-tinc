@@ -12,23 +12,23 @@ Requirements
 Role Variables
 --------------
 
-* **mode** - *string* (default is **sync**)
+* **mode** - *string* (default is **default**)
 
-  * **install**
+  * **default**
     
-    Installs and initializes a tinc network.
+    Installs tinc if needed, and makes sure the given network is configured.
 
-  * **update** 
+  * **push**
     
-    Regenerate config files and update local host cache. (keys untouched)
+    Redistribute cached host configs to all nodes.
 
-  * **sync**
-    
-    Redistribute host configs to all nodes.
+  * **remove**
+
+    Remove configuration for a given network.
 
   * **uninstall**
 
-    Remove configurations for a given tinc network.
+    Remove network configurations and uninstall tinc.
 
   * **start**
 
@@ -45,6 +45,11 @@ Role Variables
   * **disable**
 
     Stop tinc service and disable it. (persistent across reboots)
+
+
+* **regen_keys** - *boolean* (default is **no**)
+
+    Force regeneration of RSA key pair when running default mode on an existing setup.   
 
 Role Defaults
 -------------
@@ -104,8 +109,9 @@ Other Variables
 Dependencies
 ------------
 
-None.
-
+From apt module:
+* python-apt
+* aptitude
 
 Example Playbook
 -------------------------
@@ -117,22 +123,27 @@ A tinc network is defined in the inventory as follows:
     node2 node_ip=10.0.1.2
     node3 node_ip=10.0.1.3
 
+
 Here is an example playbook that installs tinc, configures a network and starts it.
 
     ---
-    # Install tinc and configure foovpn network
+    # Make sure tinc is installed and foovpn network configured
     - hosts: foovpn
       vars:
       - netname: "foovpn"
       roles:
-      - { role: tinc, mode: install }
-    
-    # Sync all hosts and start vpn
+      - tinc
+
+
+Another example specifying the operation mode:
+
+    ---
+    # Redistribute host configurations and restart tinc
     - hosts: foovpn
       vars:
       - netname: "foovpn"
       roles:
-      - { role: tinc, mode: sync }
+      - { role: tinc, mode: push }
 
 
 Caveat: Make sure that host_ip is correctly set. In a default NAT vagrant setup, each node will have the same IP for eth0.

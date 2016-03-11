@@ -50,3 +50,6 @@ digest: "sha384" #todo: test sha512
 # Local host cache
 host_cache: ".tinc_hosts"
 
+# Tinc conf directory
+tinc_conf_dir: "/etc/tinc"
+
