@@ -38,6 +38,8 @@
   when: mode == "uninstall" 
 
 - name: create network config
+  vars:
+  - netgroup_b: "{{ netgroup | default(netname) }}"
   template: >
     src=tinc.conf.j2
     dest=/etc/tinc/{{ netname }}/tinc.conf
@@ -49,11 +51,21 @@
     dest=/etc/tinc/{{ netname }}/hosts/{{ ansible_hostname }}
   when: (mode == "install") or (mode == "update")
 
+- name: re-inject host public key in config
+  shell: cat /etc/tinc/{{ netname }}/rsa_key.pub >> /etc/tinc/{{ netname }}/hosts/{{ ansible_hostname }}
+  when: mode == "update"
+
 - name: create tinc key pair
   when: mode == "install"
   shell: tincd -n {{ netname }} -K{{ keysize }}
   args:
     creates: /etc/tinc/{{ netname }}/rsa_key.priv
+
+- name: backup tinc public key
+  when: mode == "install"
+  shell: sed -n -e '/BEGIN RSA PUBLIC KEY/,$p' /etc/tinc/{{ netname }}/hosts/{{ ansible_hostname }} > /etc/tinc/{{ netname }}/rsa_key.pub
+  args:
+    creates: /etc/tinc/{{ netname }}/rsa_key.pub
 
 - name: add network to /etc/tinc/nets.boot
   lineinfile: >

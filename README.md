@@ -18,7 +18,7 @@ Role Variables
     
     Installs and initializes a tinc network.
 
-  * **update** - (may be broken, todo)
+  * **update** 
     
     Regenerate config files and update local host cache. (keys untouched)
 
@@ -93,6 +93,14 @@ Role Defaults
 
   Local cache for host config files.
 
+
+Other Variables
+---------------
+
+* **netgroup** - *string* (defaults to netname)
+
+  Name of group in inventory containing all nodes for given network.
+
 Dependencies
 ------------
 
@@ -104,7 +112,7 @@ Example Playbook
 
 A tinc network is defined in the inventory as follows:
 
-    [tinc_foovpn] # where foovpn is the tinc network name
+    [foovpn] # where foovpn is the tinc network name
     node1 node_ip=10.0.1.1
     node2 node_ip=10.0.1.2
     node3 node_ip=10.0.1.3
@@ -113,14 +121,14 @@ Here is an example playbook that installs tinc, configures a network and starts 
 
     ---
     # Install tinc and configure foovpn network
-    - hosts: tinc_foovpn
+    - hosts: foovpn
       vars:
       - netname: "foovpn"
       roles:
       - { role: tinc, mode: install }
     
     # Sync all hosts and start vpn
-    - hosts: tinc_foovpn
+    - hosts: foovpn
       vars:
       - netname: "foovpn"
       roles:

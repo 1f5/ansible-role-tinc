@@ -1,7 +1,7 @@
 Name = {{ ansible_hostname }}
 AddressFamily = {{ addrfam }}
 Interface = {{ iface }}
-{% for host in play_hosts %}
+{% for host in groups[netgroup_b] %}
 {% if ansible_hostname != hostvars[host]['ansible_hostname'] %}
 ConnectTo = {{ hostvars[host]['ansible_hostname'] }}
 {% endif %}
